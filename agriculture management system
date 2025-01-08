@@ -1,0 +1,268 @@
+CREATE TABLE Farmers (
+    Farmer_ID NUMBER PRIMARY KEY,
+    Farmer_Name VARCHAR2(100),
+    Contact_Number VARCHAR2(15),
+    Address VARCHAR2(250)
+);
+
+CREATE TABLE Fields (
+    Field_ID NUMBER PRIMARY KEY,
+    Farmer_ID NUMBER,
+    Field_Name VARCHAR2(100),
+    Area NUMBER,
+    CONSTRAINT fk_Farmer FOREIGN KEY (Farmer_ID) REFERENCES Farmers(Farmer_ID)
+);
+
+CREATE TABLE Crops (
+    Crop_ID NUMBER PRIMARY KEY,
+    Field_ID NUMBER,
+    Crop_Name VARCHAR2(100),
+    Planting_Date DATE,
+    Harvest_Date DATE,
+    CONSTRAINT fk_Field FOREIGN KEY (Field_ID) REFERENCES Fields(Field_ID)
+);
+
+CREATE TABLE Weather_Data (
+    Weather_ID NUMBER(10) PRIMARY KEY,
+    Field_ID NUMBER(10),
+    Weather_Date DATE,
+    Temperature NUMBER(5, 2),
+    Rainfall NUMBER(5, 2),
+    CONSTRAINT fk_FieldWeather FOREIGN KEY (Field_ID) REFERENCES Fields(Field_ID)
+);
+
+CREATE TABLE Irrigation_Schedule (
+    Schedule_ID NUMBER PRIMARY KEY,
+    Field_ID NUMBER,
+    Start_Date DATE,
+    End_Date DATE,
+    Water_Amount NUMBER,
+    CONSTRAINT fk_FieldIrrigation FOREIGN KEY (Field_ID) REFERENCES Fields(Field_ID)
+);
+
+CREATE TABLE Harvest_Records (
+    Record_ID NUMBER PRIMARY KEY,
+    Crop_ID NUMBER,
+    Harvest_Amount NUMBER,
+    Harvest_Date DATE,
+    CONSTRAINT fk_CropHarvest FOREIGN KEY (Crop_ID) REFERENCES Crops(Crop_ID)
+);
+
+CREATE TABLE Pests_Management (
+    Pest_ID NUMBER PRIMARY KEY,
+    Crop_ID NUMBER,
+    Pest_Name VARCHAR2(100),
+    Treatment VARCHAR2(250),
+    CONSTRAINT fk_CropPest FOREIGN KEY (Crop_ID) REFERENCES Crops(Crop_ID)
+);
+
+CREATE TABLE Soil_Data (
+    Soil_ID NUMBER PRIMARY KEY,
+    Field_ID NUMBER,
+    Measurement_Date DATE,
+    pH_Level NUMBER,
+    Nutrient_Level VARCHAR2(100),
+    CONSTRAINT fk_FieldSoil FOREIGN KEY (Field_ID) REFERENCES Fields(Field_ID)
+);
+
+CREATE TABLE Sensors (
+    Sensor_ID NUMBER PRIMARY KEY,
+    Field_ID NUMBER,
+    Sensor_Type VARCHAR2(100),
+    Reading NUMBER,
+    Reading_Date DATE,
+    CONSTRAINT fk_FieldSensor FOREIGN KEY (Field_ID) REFERENCES Fields(Field_ID)
+);
+
+CREATE TABLE Alerts (
+    Alert_ID NUMBER PRIMARY KEY,
+    Field_ID NUMBER,
+    Alert_Message VARCHAR2(250),
+    Alert_Date DATE,
+    CONSTRAINT fk_FieldAlert FOREIGN KEY (Field_ID) REFERENCES Fields(Field_ID)
+);
+
+INSERT INTO Farmers (Farmer_ID, Farmer_Name, Contact_Number, Address)
+VALUES (1, 'John Smith', '123-456-7890', '123 Farm St, Village, Country');
+
+INSERT INTO Farmers (Farmer_ID, Farmer_Name, Contact_Number, Address)
+VALUES (2, 'Alice Brown', '987-654-3210', '456 Field St, Village, Country');
+
+INSERT INTO Fields (Field_ID, Farmer_ID, Field_Name, Area)
+VALUES (1, 1, 'North Field', 10);
+
+INSERT INTO Fields (Field_ID, Farmer_ID, Field_Name, Area)
+VALUES (2, 2, 'South Field', 15);
+
+INSERT INTO Crops (Crop_ID, Field_ID, Crop_Name, Planting_Date, Harvest_Date)
+VALUES (1, 1, 'Wheat', TO_DATE('2024-10-01', 'YYYY-MM-DD'), TO_DATE('2025-04-01', 'YYYY-MM-DD'));
+
+INSERT INTO Crops (Crop_ID, Field_ID, Crop_Name, Planting_Date, Harvest_Date)
+VALUES (2, 2, 'Corn', TO_DATE('2024-09-15', 'YYYY-MM-DD'), TO_DATE('2025-03-15', 'YYYY-MM-DD'));
+
+INSERT INTO Weather_Data (Weather_ID, Field_ID, Weather_Date, Temperature, Rainfall)
+VALUES (1, 1, TO_DATE('2024-10-01', 'YYYY-MM-DD'), 22, 5);
+
+INSERT INTO Weather_Data (Weather_ID, Field_ID, Weather_Date, Temperature, Rainfall)
+VALUES (2, 2, TO_DATE('2024-10-15', 'YYYY-MM-DD'), 24, 10);
+
+INSERT INTO Irrigation_Schedule (Schedule_ID, Field_ID, Start_Date, End_Date, Water_Amount)
+VALUES (1, 1, TO_DATE('2024-10-01', 'YYYY-MM-DD'), TO_DATE('2024-10-10', 'YYYY-MM-DD'), 100);
+
+INSERT INTO Irrigation_Schedule (Schedule_ID, Field_ID, Start_Date, End_Date, Water_Amount)
+VALUES (2, 2, TO_DATE('2024-09-20', 'YYYY-MM-DD'), TO_DATE('2024-10-05', 'YYYY-MM-DD'), 150);
+
+INSERT INTO Harvest_Records (Record_ID, Crop_ID, Harvest_Amount, Harvest_Date)
+VALUES (1, 1, 500, TO_DATE('2025-04-01', 'YYYY-MM-DD'));
+
+INSERT INTO Harvest_Records (Record_ID, Crop_ID, Harvest_Amount, Harvest_Date)
+VALUES (2, 2, 750, TO_DATE('2025-03-15', 'YYYY-MM-DD'));
+
+INSERT INTO Pests_Management (Pest_ID, Crop_ID, Pest_Name, Treatment)
+VALUES (1, 1, 'Aphids', 'Use insecticidal soap or neem oil');
+
+INSERT INTO Pests_Management (Pest_ID, Crop_ID, Pest_Name, Treatment)
+VALUES (2, 2, 'Corn Borer', 'Apply Bacillus thuringiensis (Bt) insecticide');
+
+-- Insert sample data into the Soil_Data table
+INSERT INTO Soil_Data (Soil_ID, Field_ID, Measurement_Date, pH_Level, Nutrient_Level)
+VALUES (1, 1, TO_DATE('2024-11-01', 'YYYY-MM-DD'), 6.5, 'High');
+
+INSERT INTO Soil_Data (Soil_ID, Field_ID, Measurement_Date, pH_Level, Nutrient_Level)
+VALUES (2, 2, TO_DATE('2024-11-15', 'YYYY-MM-DD'), 7.0, 'Medium');
+
+CREATE OR REPLACE VIEW Farmer_Cultivated_Area AS
+SELECT f.Farmer_ID, SUM(f.Area) AS Total_Cultivated_Area
+FROM Fields f
+GROUP BY f.Farmer_ID;
+
+CREATE OR REPLACE VIEW Overall_Cultivated_Area AS
+SELECT SUM(f.Area) AS Total_Overall_Area
+FROM Fields f;
+
+CREATE OR REPLACE PROCEDURE Add_Crop (
+    p_Crop_ID IN NUMBER,
+    p_Field_ID IN NUMBER,
+    p_Crop_Name IN VARCHAR2,
+    p_Planting_Date IN DATE,
+    p_Harvest_Date IN DATE
+) AS
+BEGIN
+    INSERT INTO Crops (Crop_ID, Field_ID, Crop_Name, Planting_Date, Harvest_Date)
+    VALUES (p_Crop_ID, p_Field_ID, p_Crop_Name, p_Planting_Date, p_Harvest_Date);
+END;
+/
+
+CREATE OR REPLACE FUNCTION Calculate_Total_Harvest (
+    p_Field_ID IN NUMBER
+) RETURN NUMBER AS
+    total_harvest NUMBER;
+BEGIN
+    SELECT SUM(Harvest_Amount) INTO total_harvest
+    FROM Harvest_Records
+    WHERE Crop_ID IN (SELECT Crop_ID FROM Crops WHERE Field_ID = p_Field_ID);
+    
+    RETURN total_harvest;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE Update_Soil_Data (
+    p_Soil_ID IN NUMBER,
+    p_Field_ID IN NUMBER,
+    p_Measurement_Date IN DATE,
+    p_pH_Level IN NUMBER,
+    p_Nutrient_Level IN VARCHAR2
+) AS
+BEGIN
+    UPDATE Soil_Data
+    SET Field_ID = p_Field_ID,
+        Measurement_Date = p_Measurement_Date,
+        pH_Level = p_pH_Level,
+        Nutrient_Level = p_Nutrient_Level
+    WHERE Soil_ID = p_Soil_ID;
+END;
+/
+
+-- Example: Update soil data
+EXEC Update_Soil_Data(1, 1, TO_DATE('2025-01-01', 'YYYY-MM-DD'), 6.8, 'Medium');
+
+-- Example: Add a crop
+EXEC Add_Crop(3, 1, 'Barley', TO_DATE('2025-02-01', 'YYYY-MM-DD'), TO_DATE('2025-08-01', 'YYYY-MM-DD'));
+
+
+
+-- View farmer cultivated area
+SELECT * FROM Farmer_Cultivated_Area;
+
+-- View overall cultivated area
+SELECT * FROM Overall_Cultivated_Area;
+
+
+-- Calculate total harvest for a field
+SELECT Calculate_Total_Harvest(1) AS Total_Harvest FROM dual;
+
+
+SELECT 
+    c.Crop_Name,
+    f.Field_Name,
+    f.Area AS Cultivated_Area
+FROM 
+    Crops c
+JOIN 
+    Fields f ON c.Field_ID = f.Field_ID;
+
+
+
+
+SELECT 
+    c.Crop_ID,
+    c.Crop_Name,
+    c.Planting_Date,
+    c.Harvest_Date,
+    f.Field_Name,
+    f.Area AS Cultivated_Area,
+    fa.Farmer_Name,
+    fa.Contact_Number,
+    fa.Address,
+    w.Weather_Date,
+    w.Temperature,
+    w.Rainfall,
+    i.Start_Date AS Irrigation_Start_Date,
+    i.End_Date AS Irrigation_End_Date,
+    i.Water_Amount,
+    h.Harvest_Amount,
+    h.Harvest_Date AS Actual_Harvest_Date,
+    p.Pest_Name,
+    p.Treatment,
+    s.Measurement_Date AS Soil_Measurement_Date,
+    s.pH_Level,
+    s.Nutrient_Level,
+    se.Sensor_Type,
+    se.Reading,
+    se.Reading_Date,
+    al.Alert_Message,
+    al.Alert_Date
+FROM 
+    Crops c
+JOIN 
+    Fields f ON c.Field_ID = f.Field_ID
+JOIN 
+    Farmers fa ON f.Farmer_ID = fa.Farmer_ID
+LEFT JOIN 
+    Weather_Data w ON f.Field_ID = w.Field_ID
+LEFT JOIN 
+    Irrigation_Schedule i ON f.Field_ID = i.Field_ID
+LEFT JOIN 
+    Harvest_Records h ON c.Crop_ID = h.Crop_ID
+LEFT JOIN 
+    Pests_Management p ON c.Crop_ID = p.Crop_ID
+LEFT JOIN 
+    Soil_Data s ON f.Field_ID = s.Field_ID
+LEFT JOIN 
+    Sensors se ON f.Field_ID = se.Field_ID
+LEFT JOIN 
+    Alerts al ON f.Field_ID = al.Field_ID;
+
+
+
+
